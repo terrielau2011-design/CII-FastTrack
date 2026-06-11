@@ -15,7 +15,7 @@
       <div class="logo">
         <span class="logo-icon">🎯</span>
         <span class="logo-text">CII FastTrack</span>
-        <span class="version-badge" id="versionBadge">v3.2</span>
+        <span class="version-badge" id="versionBadge">v4.0</span>
       </div>
       <div class="nav-tabs">
         <button class="nav-tab active" data-tab="calculator">📊 學分計算器</button>
@@ -195,17 +195,35 @@
         </div>
 
         <!-- Filter -->
-        <div class="filter-bar">
-          <button class="filter-btn active" data-filter="all">全部 All</button>
-          <button class="filter-btn" data-filter="insurance">🛡️ Insurance</button>
-          <button class="filter-btn" data-filter="financial-planning">💰 Financial Planning</button>
-          <button class="filter-btn" data-filter="award-cert">🏅 Award & Certificate</button>
-          <button class="filter-btn" data-filter="diploma">🎓 Diploma</button>
-          <button class="filter-btn" data-filter="advanced-diploma">🎯 Advanced Diploma</button>
-          <button class="filter-btn" data-filter="mcq">📝 MCQ</button>
-          <button class="filter-btn" data-filter="mixed">🔄 Mixed</button>
-          <button class="filter-btn" data-filter="coursework">📝 Coursework</button>
-          <button class="filter-btn" data-filter="written">📝 Written Exam</button>
+        <!-- Filter (now using multi-select above) -->
+
+        <!-- Multi-select filters: Pathway + Level + Assessment -->
+        <div class="filter-group">
+          <div class="filter-group-label">路線 Pathway</div>
+          <div class="filter-row" id="filterPathway">
+            <button class="filter-btn-multi active" data-filter-type="pathway" data-filter-value="all">全部 All</button>
+            <button class="filter-btn-multi" data-filter-type="pathway" data-filter-value="insurance">🛡️ Insurance</button>
+            <button class="filter-btn-multi" data-filter-type="pathway" data-filter-value="financial-planning">💰 Financial Planning</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">級別 Level</div>
+          <div class="filter-row" id="filterLevel">
+            <button class="filter-btn-multi active" data-filter-type="level" data-filter-value="all">全部 All</button>
+            <button class="filter-btn-multi" data-filter-type="level" data-filter-value="award-cert">🏅 Award & Certificate</button>
+            <button class="filter-btn-multi" data-filter-type="level" data-filter-value="diploma">🎓 Diploma</button>
+            <button class="filter-btn-multi" data-filter-type="level" data-filter-value="advanced-diploma">🎯 Advanced Diploma</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">考評 Assessment</div>
+          <div class="filter-row" id="filterAssessment">
+            <button class="filter-btn-multi active" data-filter-type="assessment" data-filter-value="all">全部 All</button>
+            <button class="filter-btn-multi" data-filter-type="assessment" data-filter-value="mcq">📝 MCQ</button>
+            <button class="filter-btn-multi" data-filter-type="assessment" data-filter-value="mixed">🔄 Mixed</button>
+            <button class="filter-btn-multi" data-filter-type="assessment" data-filter-value="coursework">📝 Coursework</button>
+            <button class="filter-btn-multi" data-filter-type="assessment" data-filter-value="written">📝 Written Exam</button>
+          </div>
         </div>
 
         <!-- Subject Table -->
@@ -477,7 +495,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>CII FastTrack <strong id="footerVersion">v3.2</strong> | 資料來源：<a href="https://www.cii.co.uk" target="_blank" rel="noopener">CII 官網</a> | <a href="https://www.cii.co.uk/learning/qualifications/assessment-information/after-the-exam/results-information/" target="_blank" rel="noopener">及格線參考</a></p>
+    <p>CII FastTrack <strong id="footerVersion">v4.0</strong> | 資料來源：<a href="https://www.cii.co.uk" target="_blank" rel="noopener">CII 官網</a> | <a href="https://www.cii.co.uk/learning/qualifications/assessment-information/after-the-exam/results-information/" target="_blank" rel="noopener">及格線參考</a></p>
     <p class="footer-note">⚠️ 991 及 994 已於 2025/12/31 停止新報名，不列入推薦路徑</p>
   </footer>
 

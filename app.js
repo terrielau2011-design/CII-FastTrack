@@ -17,6 +17,7 @@
 
   function getTargetCredits() {
     const level = QUALIFICATION_LEVELS.find(l => l.id === state.targetLevel);
+    if (state.targetLevel === 'fellowship') return 290; // Fellowship base is Adv Diploma 290, plus programme
     return level ? level.creditsRequired : 290;
   }
 
@@ -99,12 +100,14 @@
     container.innerHTML = QUALIFICATION_LEVELS.map(l => {
       const isSelected = state.targetLevel === l.id;
       const isAccessible = state.pathway !== null;
+      const fellowshipNote = l.isProgram ? '⚠️ 非純學分制，需額外 Programme' : '';
       return `
         <div class="level-card ${isSelected ? 'selected' : ''} ${!isAccessible ? 'disabled' : ''}" data-level="${l.id}">
           <div class="lc-label">${l.label}</div>
-          <div class="lc-credits">${l.creditsRequired} credits</div>
+          <div class="lc-credits">${l.isProgram ? '290+ Programme' : l.creditsRequired + ' credits'}</div>
           <div class="lc-designation">${l.designation}</div>
           <div class="lc-desc">${l.description}</div>
+          ${fellowshipNote ? `<div class="lc-note">${fellowshipNote}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -112,7 +115,7 @@
     container.querySelectorAll('.level-card:not(.disabled)').forEach(card => {
       card.addEventListener('click', () => {
         state.targetLevel = card.dataset.level;
-        state.diplomaCredits = 0; // reset since target changed
+        state.diplomaCredits = 0;
         renderLevelCards();
         renderSubjectGrid();
         updateCalculator();
@@ -539,47 +542,74 @@
   }
 
   // ========== Subject Table ==========
-  function renderSubjectTable(filter) {
+  // ===== Multi-dimensional Subject Table Filter =====
+  const tableFilters = { pathway: 'all', level: 'all', assessment: 'all' };
+
+  function renderSubjectTable() {
     const tbody = document.getElementById('subjectTableBody');
     const allSubjects = [...INSURANCE_AWARD_CERT_SUBJECTS, ...INSURANCE_SUBJECTS, ...FP_AWARD_CERT_DIP_SUBJECTS, ...FP_SUBJECTS];
-    const filtered = filter === 'all' ? allSubjects : allSubjects.filter(s => {
-      if (filter === 'insurance') return s.pathway === 'insurance';
-      if (filter === 'financial-planning') return s.pathway === 'financial-planning';
-      if (filter === 'award-cert') return s.levelGroup === 'award' || s.levelGroup === 'certificate';
-      if (filter === 'diploma') return s.levelGroup === 'diploma';
-      if (filter === 'advanced-diploma') return !s.levelGroup || s.levelGroup === 'advanced-diploma' || s.level >= 6;
-      if (filter === 'core') return s.category && s.category.startsWith('core');
-      if (filter === 'mixed') return s.assessmentMode === 'mixed';
-      if (filter === 'coursework') return s.assessmentMode === 'coursework';
-      if (filter === 'written') return s.assessmentMode === 'written';
-      if (filter === 'mcq') return s.assessmentMode === 'mcq';
-      return true;
-    });
 
-    tbody.innerHTML = filtered.map(s => `
-      <tr class="${s.withdrawing ? 'withdrawing-row' : ''}">
-        <td><strong>${s.code}</strong></td>
-        <td>${s.nameEN}<br><span class="zh-name">${s.nameZH}</span></td>
-        <td>${s.pathway === 'insurance' ? '🛡️' : '💰'}</td>
-        <td><span class="cat-badge ${s.levelGroup || 'adv-dip'}">${s.levelGroup === 'award' ? '🏅 Award' : s.levelGroup === 'certificate' ? '📜 Cert' : s.levelGroup === 'diploma' ? '🎓 Dip' : s.categoryLabel || '📘'}</span></td>
-        <td><strong>${s.credits}</strong></td>
-        <td>${s.level}</td>
-        <td>${s.assessmentLabel}</td>
-        <td>${s.mcqPassMark ? s.mcqPassMark + '%' : '—'}</td>
-        <td>${s.cwPassMark ? s.cwPassMark + '%' : '—'}</td>
-        <td>${s.writtenPassMark ? s.writtenPassMark + '%' : '—'}</td>
-        <td>${s.studyHours}</td>
-        <td class="notes-cell">${s.notes || s.description || '—'}</td>
-      </tr>
-    `).join('');
+    let filtered = allSubjects;
+
+    // Apply pathway filter
+    if (tableFilters.pathway !== 'all') {
+      filtered = filtered.filter(s => s.pathway === tableFilters.pathway);
+    }
+    // Apply level filter
+    if (tableFilters.level !== 'all') {
+      if (tableFilters.level === 'award-cert') {
+        filtered = filtered.filter(s => s.levelGroup === 'award' || s.levelGroup === 'certificate' || s.level <= 3);
+      } else if (tableFilters.level === 'diploma') {
+        filtered = filtered.filter(s => s.levelGroup === 'diploma' || (s.level === 4 && !s.levelGroup));
+      } else if (tableFilters.level === 'advanced-diploma') {
+        filtered = filtered.filter(s => !s.levelGroup || s.levelGroup === 'advanced-diploma' || s.level >= 6);
+      }
+    }
+    // Apply assessment filter
+    if (tableFilters.assessment !== 'all') {
+      filtered = filtered.filter(s => s.assessmentMode === tableFilters.assessment);
+    }
+
+    tbody.innerHTML = filtered.map(s => {
+      const levelBadge = s.levelGroup === 'award' ? '🏅 Award' :
+                         s.levelGroup === 'certificate' ? '📜 Cert' :
+                         s.levelGroup === 'diploma' ? '🎓 Dip' :
+                         (s.level >= 6 ? '🎯 AdvDip' : '🎓 Dip');
+      return `
+        <tr class="${s.withdrawing ? 'withdrawing-row' : ''}">
+          <td><strong>${s.code}</strong></td>
+          <td>${s.nameEN}<br><span class="zh-name">${s.nameZH}</span></td>
+          <td>${s.pathway === 'insurance' ? '🛡️ Ins' : '💰 FP'}</td>
+          <td><span class="cat-badge ${s.levelGroup || 'adv-dip'}">${levelBadge}</span></td>
+          <td><strong>${s.credits}</strong></td>
+          <td>${s.level}</td>
+          <td>${s.assessmentLabel}</td>
+          <td>${s.mcqPassMark ? s.mcqPassMark + '%' : '—'}</td>
+          <td>${s.cwPassMark ? s.cwPassMark + '%' : '—'}</td>
+          <td>${s.writtenPassMark ? s.writtenPassMark + '%' : '—'}</td>
+          <td>${s.studyHours}</td>
+          <td class="notes-cell">${s.notes || s.description || '—'}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function initFilterButtons() {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // Each filter group can have ONE active button within its group
+    // But multiple groups can be active simultaneously
+    document.querySelectorAll('.filter-btn-multi').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        const filterType = btn.dataset.filterType;
+        const filterValue = btn.dataset.filterValue;
+
+        // Deactivate only siblings in same group
+        const siblings = btn.parentElement.querySelectorAll('.filter-btn-multi');
+        siblings.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderSubjectTable(btn.dataset.filter);
+
+        // Update filter state
+        tableFilters[filterType] = filterValue;
+        renderSubjectTable();
       });
     });
   }
@@ -759,7 +789,7 @@
     renderDirectionSelection();
     renderRPLSection();
     renderSubjectGrid();
-    renderSubjectTable('all');
+    renderSubjectTable(); // uses tableFilters state
     initFilterButtons();
     initRegisterForm();
     initEventListeners();

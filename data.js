@@ -9,7 +9,7 @@ const QUALIFICATION_LEVELS = [
   { id: 'certificate', label: '📜 Certificate', creditsRequired: 40, designation: 'Cert CII / CertPFS', description: '初級 — 保險/理財規劃核心知識，可執業' },
   { id: 'diploma', label: '🎓 Diploma', creditsRequired: 120, designation: 'Dip CII / DipPFS', description: '中級 — 技術與管理知識，專業認可' },
   { id: 'advanced-diploma', label: '🎯 Advanced Diploma', creditsRequired: 290, designation: 'ACII / APFS', description: '高級 — 深度專業知識，可申請 Chartered' },
-  { id: 'fellowship', label: '👑 Fellowship', creditsRequired: 350, designation: 'FCII / FPFS', description: '最高級 — 行業領袖級別' }
+  { id: 'fellowship', label: '👑 Fellowship', creditsRequired: 290, designation: 'FCII / FPFS', description: '⚠️ 需完成 Adv Diploma + FCII Programme（Business Ethics + Major Achievement + 3年CPD），非純學分制！此處 290 表示 Adv Diploma 底線，Fellowship 需額外 program', isProgram: true }
 ];
 
 // ===== Career Pathways =====

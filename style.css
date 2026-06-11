@@ -893,3 +893,33 @@ body {
   letter-spacing: 0.5px;
   margin-left: 4px;
 }
+
+/* ===== Multi-select Filter Groups ===== */
+.filter-group { margin: 12px 0; }
+.filter-group-label { font-size: 0.8rem; font-weight: 700; color: var(--gray-500); margin-bottom: 8px; }
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn-multi {
+  padding: 8px 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: 999px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.filter-btn-multi:hover { border-color: var(--blue); }
+.filter-btn-multi.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+/* ===== Fellowship Note ===== */
+.lc-note {
+  font-size: 0.7rem;
+  color: var(--red);
+  font-weight: 600;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: var(--red-light);
+  border-radius: var(--radius-sm);
+}
+.level-card.selected .lc-note { background: rgba(239,68,68,0.3); color: rgba(255,255,255,0.9); }
