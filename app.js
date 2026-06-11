@@ -228,10 +228,23 @@
     const subjects = getActiveSubjects();
     grid.innerHTML = '';
 
+    // Group by levelGroup first, then by category within each level
+    const levelOrder = ['award', 'certificate', 'diploma', 'advanced-diploma'];
     const groups = {};
     subjects.forEach(s => {
-      if (!groups[s.category]) groups[s.category] = { label: s.categoryLabel, subjects: [] };
-      groups[s.category].subjects.push(s);
+      const lg = s.levelGroup || 'diploma'; // fallback for subjects without levelGroup
+      const cat = s.category || 'general';
+      const groupKey = lg + '|' + cat;
+      const catLabel = s.categoryLabel || (lg === 'award' ? '🏅 Award' : lg === 'certificate' ? '📜 Certificate' : lg === 'diploma' ? '🎓 Diploma' : '📘 General');
+      const lgLabel = lg === 'award' ? '🏅 Award 級別' : lg === 'certificate' ? '📜 Certificate 級別' : lg === 'diploma' ? '🎓 Diploma 級別' : '🎯 Advanced Diploma 級別';
+      if (!groups[groupKey]) groups[groupKey] = { lg, cat, lgLabel, catLabel, subjects: [] };
+      groups[groupKey].subjects.push(s);
+    });
+
+    // Sort groups by level order
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      const lgA = groups[a].lg, lgB = groups[b].lg;
+      return (levelOrder.indexOf(lgA) || 99) - (levelOrder.indexOf(lgB) || 99);
     });
 
     // For Insurance pathway, highlight direction-recommended subjects
@@ -239,11 +252,11 @@
       ? (INSURANCE_DIRECTIONS.find(d => d.id === state.insuranceDirection)?.recommendedUnits || [])
       : [];
 
-    Object.keys(groups).forEach(key => {
+    sortedKeys.forEach(key => {
       const g = groups[key];
       const groupDiv = document.createElement('div');
       groupDiv.className = 'subject-group';
-      groupDiv.innerHTML = `<h3 class="group-title">${g.label}</h3>`;
+      groupDiv.innerHTML = `<h3 class="group-title">${g.lgLabel} — ${g.catLabel}</h3>`;
 
       g.subjects.forEach(s => {
         const isRecommended = recommendedCodes.includes(s.code);
@@ -558,11 +571,11 @@
     // Apply level filter
     if (tableFilters.level !== 'all') {
       if (tableFilters.level === 'award-cert') {
-        filtered = filtered.filter(s => s.levelGroup === 'award' || s.levelGroup === 'certificate' || s.level <= 3);
+        filtered = filtered.filter(s => s.levelGroup === 'award' || s.levelGroup === 'certificate');
       } else if (tableFilters.level === 'diploma') {
-        filtered = filtered.filter(s => s.levelGroup === 'diploma' || (s.level === 4 && !s.levelGroup));
+        filtered = filtered.filter(s => s.levelGroup === 'diploma');
       } else if (tableFilters.level === 'advanced-diploma') {
-        filtered = filtered.filter(s => !s.levelGroup || s.levelGroup === 'advanced-diploma' || s.level >= 6);
+        filtered = filtered.filter(s => s.levelGroup === 'advanced-diploma');
       }
     }
     // Apply assessment filter
