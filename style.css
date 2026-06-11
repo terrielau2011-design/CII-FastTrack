@@ -1,4 +1,4 @@
-/* CII FastTrack — Styles */
+/* CII FastTrack — Styles v2 */
 
 :root {
   --navy: #1a1a3e;
@@ -12,6 +12,10 @@
   --red-light: #fee2e2;
   --orange: #f59e0b;
   --orange-light: #fef3c7;
+  --purple: #8b5cf6;
+  --purple-light: #ede9fe;
+  --teal: #14b8a6;
+  --teal-light: #ccfbf1;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
@@ -701,3 +705,84 @@ body {
 }
 .footer a { color: var(--blue); }
 .footer-note { color: var(--red); margin-top: 4px; font-weight: 500; }
+
+/* ===== Pathway Cards ===== */
+.pathway-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+.pathway-card {
+  background: white;
+  border: 3px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+.pathway-card:hover { border-color: var(--blue); box-shadow: var(--shadow-md); }
+.pathway-card.selected { border-color: var(--blue); background: var(--blue-bg); box-shadow: var(--shadow-md); }
+.pathway-card.selected[data-pathway="financial-planning"] { border-color: var(--purple); background: var(--purple-light); }
+.pc-label { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+.pc-qual { font-size: 0.9rem; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+.pc-desc { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 12px; }
+.pc-chartered { font-size: 0.8rem; color: var(--teal); font-weight: 500; margin-bottom: 4px; }
+.pc-designation { font-size: 0.75rem; color: var(--gray-400); }
+@media (max-width: 640px) { .pathway-cards { grid-template-columns: 1fr; } }
+
+.path-intro { font-size: 0.9rem; color: var(--gray-500); margin-bottom: 12px; }
+
+/* ===== Direction Cards ===== */
+.direction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 16px 0; }
+.direction-card {
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.direction-card:hover { border-color: var(--teal); }
+.direction-card.selected { border-color: var(--teal); background: var(--teal-light); }
+.dc-label { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.dc-desc { font-size: 0.8rem; color: var(--gray-500); }
+
+/* ===== RPL Cards ===== */
+.rpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.rpl-card {
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rpl-card:hover { border-color: var(--orange); }
+.rpl-card.selected { border-color: var(--orange); background: var(--orange-light); }
+.rpl-label { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.rpl-range { font-size: 0.8rem; color: var(--orange); font-weight: 600; margin-bottom: 4px; }
+.rpl-note { font-size: 0.75rem; color: var(--gray-400); }
+
+.rpl-summary { margin: 16px 0; }
+.rpl-empty { font-size: 0.85rem; color: var(--gray-400); padding: 16px; }
+.rpl-selected-list { margin-bottom: 12px; }
+.rpl-item { padding: 8px 0; font-size: 0.85rem; }
+.rpl-total { background: var(--orange-light); padding: 16px; border-radius: var(--radius-sm); font-size: 0.95rem; text-align: center; }
+.rpl-warning { font-size: 0.8rem; color: var(--red); margin-top: 12px; font-weight: 500; }
+.rpl-warning a { color: var(--blue); }
+
+/* ===== Credit Breakdown ===== */
+.credit-breakdown { background: white; padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.cb-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid var(--gray-100); }
+.cb-row:last-child { border-bottom: none; }
+.cb-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.cb-dot.diploma { background: var(--gray-400); }
+.cb-dot.advanced { background: var(--blue); }
+.cb-dot.rpl { background: var(--orange); }
+.cb-dot.gap { background: var(--gray-200); border: 2px dashed var(--gray-400); }
+
+/* ===== Subject Card Recommended ===== */
+.subject-card.recommended { border-color: var(--teal); }
+.subject-card.recommended.selected { border-color: var(--green); background: var(--green-light); }
+.sc-recommend { font-size: 0.7rem; color: var(--teal); font-weight: 600; margin-top: 4px; }
+
+/* ===== Category Badge for FP ===== */
+.cat-badge.elective { background: var(--purple-light); color: var(--purple); }

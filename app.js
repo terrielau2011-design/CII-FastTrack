@@ -1,20 +1,34 @@
-// CII FastTrack — App Logic
+// CII FastTrack v2 — App Logic with Career Pathways + RPL
 
 (function() {
   'use strict';
 
-  // ========== State ==========
   const state = {
+    pathway: null, // 'insurance' or 'financial-planning'
+    insuranceDirection: 'general', // claims/broking/underwriting/risk/general
     passedSubjects: new Set(),
     diplomaCredits: 120,
+    rplCredits: 0,
+    rplQualifications: new Set(),
     yearsExp: 5,
     registeredStudent: null
   };
 
+  function getActiveSubjects() {
+    if (state.pathway === 'insurance') return INSURANCE_SUBJECTS;
+    if (state.pathway === 'financial-planning') return FP_SUBJECTS;
+    return [];
+  }
+
+  function getActiveCoreRules() {
+    if (state.pathway === 'insurance') return INSURANCE_CORE_RULES;
+    if (state.pathway === 'financial-planning') return FP_CORE_RULES;
+    return {};
+  }
+
   // ========== Tab Navigation ==========
   function initTabs() {
     const tabs = document.querySelectorAll('.nav-tab');
-    const mobileTabs = document.querySelectorAll('#mobileNav .nav-tab');
     const mobileNav = document.getElementById('mobileNav');
     const mobileBtn = document.getElementById('mobileMenuBtn');
 
@@ -26,46 +40,161 @@
       mobileNav.classList.remove('open');
     }
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    });
-    mobileTabs.forEach(tab => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    });
-    mobileBtn.addEventListener('click', () => {
-      mobileNav.classList.toggle('open');
+    tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+    document.querySelectorAll('#mobileNav .nav-tab').forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+    mobileBtn.addEventListener('click', () => mobileNav.classList.toggle('open'));
+  }
+
+  // ========== Pathway Selection ==========
+  function renderPathwaySelection() {
+    const container = document.getElementById('pathwayCards');
+    container.innerHTML = CAREER_PATHWAYS.map(p => `
+      <div class="pathway-card ${state.pathway === p.id ? 'selected' : ''}" data-pathway="${p.id}">
+        <div class="pc-label">${p.label}</div>
+        <div class="pc-qual">${p.qualification}</div>
+        <div class="pc-desc">${p.description}</div>
+        <div class="pc-chartered">Chartered 稱號：${p.charteredTitles.join(' / ')}</div>
+        <div class="pc-designation">Member Designation: ${p.memberDesignation}</div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.pathway-card').forEach(card => {
+      card.addEventListener('click', () => {
+        state.pathway = card.dataset.pathway;
+        renderPathwaySelection();
+        renderDirectionSelection();
+        renderSubjectGrid();
+        updateCalculator();
+      });
     });
   }
 
-  // ========== Subject Grid (Calculator) ==========
-  function renderSubjectGrid() {
-    const grid = document.getElementById('subjectGrid');
-    grid.innerHTML = '';
+  function renderDirectionSelection() {
+    const container = document.getElementById('directionSection');
+    if (state.pathway !== 'insurance') {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'block';
+    const dirGrid = document.getElementById('directionGrid');
+    dirGrid.innerHTML = INSURANCE_DIRECTIONS.map(d => `
+      <div class="direction-card ${state.insuranceDirection === d.id ? 'selected' : ''}" data-dir="${d.id}">
+        <div class="dc-label">${d.label}</div>
+        <div class="dc-desc">${d.description}</div>
+      </div>
+    `).join('');
 
-    // Group by category
-    const groups = {
-      'core-mandatory': { label: '📕 必修科目', subjects: [] },
-      'core-option': { label: '📗 核心選項', subjects: [] },
-      'elective': { label: '📘 選修科目', subjects: [] }
-    };
+    dirGrid.querySelectorAll('.direction-card').forEach(card => {
+      card.addEventListener('click', () => {
+        state.insuranceDirection = card.dataset.dir;
+        renderDirectionSelection();
+        renderSubjectGrid();
+        updateCalculator();
+      });
+    });
+  }
 
-    SUBJECTS.forEach(s => {
-      if (groups[s.category]) {
-        groups[s.category].subjects.push(s);
+  // ========== RPL Section ==========
+  function renderRPLSection() {
+    const container = document.getElementById('rplGrid');
+    container.innerHTML = RPL_QUALIFICATIONS.map(q => `
+      <div class="rpl-card ${state.rplQualifications.has(q.id) ? 'selected' : ''}" data-rpl="${q.id}">
+        <div class="rpl-label">${q.label}</div>
+        <div class="rpl-range">估算學分：${q.estimatedCredits}</div>
+        <div class="rpl-note">${q.notes}</div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.rpl-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.rpl;
+        if (state.rplQualifications.has(id)) {
+          state.rplQualifications.delete(id);
+        } else {
+          state.rplQualifications.add(id);
+        }
+        calculateRPLCredits();
+        renderRPLSection();
+        updateCalculator();
+      });
+    });
+
+    renderRPLSummary();
+  }
+
+  function calculateRPLCredits() {
+    // Use estimated mid-point of each RPL credit range as a conservative estimate
+    let total = 0;
+    state.rplQualifications.forEach(id => {
+      const q = RPL_QUALIFICATIONS.find(r => r.id === id);
+      if (q) {
+        const range = q.estimatedCredits.split('-');
+        const min = parseInt(range[0]);
+        const max = parseInt(range[1]);
+        total += Math.round((min + max) / 2); // midpoint estimate
       }
     });
+    // Cap at Advanced Diploma RPL max
+    const maxCap = RPL_MAX_CAPS.advancedDiploma.maxRPLCredits;
+    state.rplCredits = Math.min(total, maxCap);
+  }
+
+  function renderRPLSummary() {
+    const summary = document.getElementById('rplSummary');
+    if (state.rplQualifications.size === 0) {
+      summary.innerHTML = '<p class="rpl-empty">未選擇任何外部資格。如你持有相關學位或其他專業資格，選擇後可估算豁免學分。</p>';
+      return;
+    }
+
+    const items = [];
+    state.rplQualifications.forEach(id => {
+      const q = RPL_QUALIFICATIONS.find(r => r.id === id);
+      if (q) items.push(q);
+    });
+
+    summary.innerHTML = `
+      <div class="rpl-selected-list">
+        ${items.map(q => `<div class="rpl-item">✅ ${q.label} — 估算 ${q.estimatedCredits} 學分</div>`).join('')}
+      </div>
+      <div class="rpl-total">
+        估算 RPL 學分：<strong>${state.rplCredits}</strong>（上限 ${RPL_MAX_CAPS.advancedDiploma.maxRPLCredits}）
+      </div>
+      <div class="rpl-warning">⚠️ 這只是估算值。實際豁免學分需向 CII 申請確認：<a href="https://www.cii.co.uk/learning/accreditation/recognition-of-prior-learning/check-your-eligibility-and-apply/" target="_blank">cii.co.uk/prior-learning</a></div>
+    `;
+  }
+
+  // ========== Subject Grid ==========
+  function renderSubjectGrid() {
+    const grid = document.getElementById('subjectGrid');
+    if (!state.pathway) {
+      grid.innerHTML = '<p class="path-empty">請先選擇你的職業方向（Insurance 或 Financial Planning）</p>';
+      return;
+    }
+
+    const subjects = getActiveSubjects();
+    grid.innerHTML = '';
+
+    const groups = {};
+    subjects.forEach(s => {
+      if (!groups[s.category]) groups[s.category] = { label: s.categoryLabel, subjects: [] };
+      groups[s.category].subjects.push(s);
+    });
+
+    // For Insurance pathway, highlight direction-recommended subjects
+    const recommendedCodes = state.pathway === 'insurance'
+      ? (INSURANCE_DIRECTIONS.find(d => d.id === state.insuranceDirection)?.recommendedUnits || [])
+      : [];
 
     Object.keys(groups).forEach(key => {
       const g = groups[key];
-      if (g.subjects.length === 0) return;
-
       const groupDiv = document.createElement('div');
       groupDiv.className = 'subject-group';
       groupDiv.innerHTML = `<h3 class="group-title">${g.label}</h3>`;
 
       g.subjects.forEach(s => {
+        const isRecommended = recommendedCodes.includes(s.code);
         const card = document.createElement('div');
-        card.className = 'subject-card' + (s.withdrawing ? ' withdrawing' : '') + (state.passedSubjects.has(s.code) ? ' selected' : '');
+        card.className = 'subject-card' + (s.withdrawing ? ' withdrawing' : '') + (state.passedSubjects.has(s.code) ? ' selected' : '') + (isRecommended ? ' recommended' : '');
         card.dataset.code = s.code;
         card.innerHTML = `
           <div class="sc-header">
@@ -78,6 +207,7 @@
             <span class="sc-assessment">${s.assessmentLabel}</span>
             <span class="sc-level">L${s.level}</span>
           </div>
+          ${isRecommended ? '<div class="sc-recommend">⭐ 推薦</div>' : ''}
           ${s.withdrawing ? '<div class="sc-warning">⚠️ 即將退場</div>' : ''}
         `;
         card.addEventListener('click', () => toggleSubject(s.code));
@@ -102,70 +232,111 @@
   function getEarnedAdvancedCredits() {
     let total = 0;
     state.passedSubjects.forEach(code => {
-      const s = SUBJECTS.find(sub => sub.code === code);
+      const subjects = getActiveSubjects();
+      const s = subjects.find(sub => sub.code === code);
       if (s) total += s.credits;
     });
     return total;
   }
 
   function getTotalCredits() {
-    return state.diplomaCredits + getEarnedAdvancedCredits();
+    return state.diplomaCredits + getEarnedAdvancedCredits() + state.rplCredits;
   }
 
   function checkCoreRules() {
+    const rules = getActiveCoreRules();
     const passed = state.passedSubjects;
-    return {
-      m05: passed.has('M05'),
-      m92or530: passed.has('M92') || passed.has('530'),
-      '820or930or960': passed.has('820') || passed.has('930') || passed.has('960')
-    };
+    const results = {};
+
+    Object.keys(rules).forEach(key => {
+      const rule = rules[key];
+      if (rule.choose) {
+        results[key] = rule.codes.some(c => passed.has(c));
+      } else {
+        results[key] = rule.codes.every(c => passed.has(c));
+      }
+    });
+
+    return results;
   }
 
   function calculateRecommendedPath() {
+    if (!state.pathway) return { gap: 290, subjects: [], message: '請先選擇職業方向' };
+
     const totalCredits = getTotalCredits();
     const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
 
     if (gap <= 0) {
-      return { gap: 0, subjects: [], totalWeeks: 0, message: '🎉 你已達到 290 學分！可以申請 Chartered 資格！' };
+      return { gap: 0, subjects: [], totalWeeks: 0, message: '🎉 你已達到 290 學分！' };
     }
 
+    const subjects = getActiveSubjects();
     const rules = checkCoreRules();
     const recommended = [];
 
-    // Step 1: Add missing core subjects
-    if (!rules.m05) {
-      recommended.push(SUBJECTS.find(s => s.code === 'M05'));
-    }
-    if (!rules.m92or530) {
-      // Recommend M92 (Level 4, easier) over 530 (Level 6)
-      recommended.push(SUBJECTS.find(s => s.code === 'M92'));
-    }
-    if (!rules['820or930or960']) {
-      // Default to 820 (most common)
-      recommended.push(SUBJECTS.find(s => s.code === '820'));
-    }
+    // Add missing core subjects
+    const coreRules = getActiveCoreRules();
+    Object.keys(coreRules).forEach(key => {
+      const rule = coreRules[key];
+      if (!rules[key]) {
+        if (rule.choose) {
+          // Pick the best option based on direction
+          let bestCode;
+          if (state.pathway === 'insurance') {
+            if (key === 'm92or530') {
+              bestCode = state.insuranceDirection === 'general' ? 'M92' : '530';
+            } else if (key === '820or930or960') {
+              const dirMap = { claims: '820', broking: '930', underwriting: '960', risk: '820', general: '820' };
+              bestCode = dirMap[state.insuranceDirection] || '820';
+            }
+          } else {
+            bestCode = rule.codes[0]; // AF5 for FP
+          }
+          const subj = subjects.find(s => s.code === bestCode);
+          if (subj) recommended.push(subj);
+        } else {
+          rule.codes.forEach(code => {
+            const subj = subjects.find(s => s.code === code);
+            if (subj) recommended.push(subj);
+          });
+        }
+      }
+    });
 
-    // Calculate credits from core recommendations
+    // Fill with electives
     const coreCredits = recommended.reduce((sum, s) => sum + s.credits, 0);
     const remainingGap = gap - coreCredits;
 
-    // Step 2: Fill with electives (excluding withdrawing ones)
     if (remainingGap > 0) {
-      const availableElectives = SUBJECTS.filter(s =>
+      const availableElectives = subjects.filter(s =>
         s.category === 'elective' &&
         !s.withdrawing &&
         !state.passedSubjects.has(s.code) &&
         !recommended.find(r => r.code === s.code)
       );
 
-      // Sort by credit efficiency (credits per study hour) descending
-      availableElectives.sort((a, b) => (b.credits / b.studyHours) - (a.credits / a.studyHours));
+      // Prioritize direction-recommended units first
+      if (state.pathway === 'insurance' && state.insuranceDirection !== 'general') {
+        const dir = INSURANCE_DIRECTIONS.find(d => d.id === state.insuranceDirection);
+        const dirUnits = availableElectives.filter(s => dir.recommendedUnits.includes(s.code));
+        const otherUnits = availableElectives.filter(s => !dir.recommendedUnits.includes(s.code));
+        otherUnits.sort((a, b) => (b.credits / b.studyHours) - (a.credits / a.studyHours));
+        const sorted = [...dirUnits, ...otherUnits];
 
-      let electiveCredits = 0;
-      for (const s of availableElectives) {
-        if (electiveCredits >= remainingGap) break;
-        recommended.push(s);
-        electiveCredits += s.credits;
+        let electiveCredits = 0;
+        for (const s of sorted) {
+          if (electiveCredits >= remainingGap) break;
+          recommended.push(s);
+          electiveCredits += s.credits;
+        }
+      } else {
+        availableElectives.sort((a, b) => (b.credits / b.studyHours) - (a.credits / a.studyHours));
+        let electiveCredits = 0;
+        for (const s of availableElectives) {
+          if (electiveCredits >= remainingGap) break;
+          recommended.push(s);
+          electiveCredits += s.credits;
+        }
       }
     }
 
@@ -173,10 +344,7 @@
     const totalNewCredits = recommended.reduce((sum, s) => sum + s.credits, 0);
 
     return {
-      gap,
-      subjects: recommended,
-      totalWeeks,
-      totalNewCredits,
+      gap, subjects: recommended, totalWeeks, totalNewCredits,
       newTotal: totalCredits + totalNewCredits,
       message: `你需要再獲得 ${gap} 學分。推薦 ${recommended.length} 科，預計 ${totalWeeks} 週完成。`
     };
@@ -188,32 +356,56 @@
     const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
     const pct = Math.min(Math.round(totalCredits / TARGET_CREDITS * 100), 100);
 
-    // Update overview cards
     document.getElementById('earnedCredits').textContent = totalCredits;
     document.getElementById('creditGap').textContent = gap;
 
     // Chartered status
     const charteredEl = document.getElementById('charteredStatus');
-    if (totalCredits >= TARGET_CREDITS && state.yearsExp >= 5) {
-      charteredEl.textContent = '✅ 符合資格！';
+    if (totalCredits >= TARGET_CREDITS && state.yearsExp >= 5 && state.pathway) {
+      const titles = CAREER_PATHWAYS.find(p => p.id === state.pathway)?.charteredTitles || [];
+      charteredEl.textContent = `✅ 可申請 ${titles[0]}！`;
       charteredEl.className = 'credit-value chartered-status eligible';
     } else if (totalCredits >= TARGET_CREDITS) {
       charteredEl.textContent = '⚠️ 學分達標，年資未夠';
       charteredEl.className = 'credit-value chartered-status partial';
     } else {
-      charteredEl.textContent = '❌ 未達標';
+      charteredEl.textContent = `❌ 差 ${gap} 學分`;
       charteredEl.className = 'credit-value chartered-status';
     }
 
-    // Progress bar
+    // Progress
     document.getElementById('progressBar').style.width = pct + '%';
     document.getElementById('progressPct').textContent = pct + '%';
 
+    // Credit breakdown
+    document.getElementById('creditBreakdown').innerHTML = `
+      <div class="cb-row"><span class="cb-dot diploma"></span> Diploma: <strong>${state.diplomaCredits}</strong></div>
+      <div class="cb-row"><span class="cb-dot advanced"></span> Adv Dip: <strong>${earnedAdvCredits}</strong></div>
+      <div class="cb-row"><span class="cb-dot rpl"></span> RPL (估): <strong>${state.rplCredits}</strong></div>
+      <div class="cb-row"><span class="cb-dot gap"></span> 差距: <strong>${gap}</strong></div>
+    `;
+
     // Core checklist
     const rules = checkCoreRules();
-    document.getElementById('checkM05').textContent = rules.m05 ? '✅' : '⬜';
-    document.getElementById('checkM92or530').textContent = rules.m92or530 ? '✅' : '⬜';
-    document.getElementById('check820or930or960').textContent = rules['820or930or960'] ? '✅' : '⬜';
+    const checklist = document.getElementById('coreChecklist');
+    const activeRules = getActiveCoreRules();
+
+    if (!state.pathway) {
+      checklist.innerHTML = '<p class="path-empty">請先選擇職業方向</p>';
+    } else {
+      checklist.innerHTML = Object.keys(activeRules).map(key => {
+        const rule = activeRules[key];
+        const passed = rules[key];
+        return `
+          <div class="checklist-item">
+            <div class="check-icon">${passed ? '✅' : '⬜'}</div>
+            <div class="check-text">
+              <strong>${rule.label}</strong>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
     // Recommended path
     renderRecommendedPath();
@@ -221,57 +413,48 @@
 
   function renderRecommendedPath() {
     const container = document.getElementById('recommendedPath');
-    const path = calculateRecommendedPath();
+    if (!state.pathway) {
+      container.innerHTML = '<p class="path-empty">請先選擇職業方向並輸入已通過科目</p>';
+      return;
+    }
 
+    const path = calculateRecommendedPath();
     if (path.subjects.length === 0 && path.gap === 0) {
       container.innerHTML = `<div class="path-complete">${path.message}</div>`;
       return;
     }
 
-    if (path.subjects.length === 0) {
-      container.innerHTML = `<p class="path-empty">請先選擇已通過的科目</p>`;
-      return;
-    }
-
-    let html = `<div class="path-summary">${path.message}</div>`;
-    html += `<div class="path-subjects">`;
-
+    let html = `<div class="path-summary">${path.message}</div><div class="path-subjects">`;
     path.subjects.forEach((s, i) => {
       const coreTag = s.category.startsWith('core') ? '<span class="path-tag core">核心</span>' : '<span class="path-tag elective">選修</span>';
       html += `
         <div class="path-subject">
           <div class="ps-number">${i + 1}</div>
           <div class="ps-info">
-            <div class="ps-header">
-              <strong>${s.code}</strong> ${s.nameEN} ${coreTag}
-            </div>
-            <div class="ps-detail">
-              ${s.credits} 學分 | ${s.assessmentLabel} | ${s.recommendedWeeks} 週 | ${s.studyHours} hrs
-            </div>
-            ${s.mcqPassMark ? `<div class="ps-pass">MCQ 及格: ${s.mcqPassMark}%</div>` : ''}
-            <div class="ps-pass">Coursework 及格: ${s.cwPassMark}%</div>
+            <div class="ps-header"><strong>${s.code}</strong> ${s.nameEN} ${coreTag}</div>
+            <div class="ps-detail">${s.credits} credits | ${s.assessmentLabel} | ${s.recommendedWeeks} weeks</div>
+            ${s.mcqPassMark ? `<div class="ps-pass">MCQ pass: ${s.mcqPassMark}%</div>` : ''}
+            ${s.cwPassMark ? `<div class="ps-pass">Coursework pass: ${s.cwPassMark}%</div>` : ''}
+            ${s.writtenPassMark ? `<div class="ps-pass">Written exam pass: ${s.writtenPassMark}%</div>` : ''}
           </div>
         </div>
       `;
     });
-
-    html += `</div>`;
-    html += `<div class="path-result">
-      新增學分：${path.totalNewCredits} | 完成後總學分：${path.newTotal} | 預計總備考時間：~${path.totalWeeks} 週
-    </div>`;
-
+    html += `</div><div class="path-result">New credits: ${path.totalNewCredits} | Total: ${path.newTotal} | ~${path.totalWeeks} weeks</div>`;
     container.innerHTML = html;
   }
 
   // ========== Subject Table ==========
   function renderSubjectTable(filter) {
     const tbody = document.getElementById('subjectTableBody');
-    const filtered = filter === 'all' ? SUBJECTS : SUBJECTS.filter(s => {
-      if (filter === 'core-mandatory') return s.category === 'core-mandatory';
-      if (filter === 'core-option') return s.category === 'core-option';
-      if (filter === 'elective') return s.category === 'elective';
+    const allSubjects = [...INSURANCE_SUBJECTS, ...FP_SUBJECTS];
+    const filtered = filter === 'all' ? allSubjects : allSubjects.filter(s => {
+      if (filter === 'insurance') return INSURANCE_SUBJECTS.includes(s);
+      if (filter === 'financial-planning') return FP_SUBJECTS.includes(s);
+      if (filter === 'core') return s.category.startsWith('core');
       if (filter === 'mixed') return s.assessmentMode === 'mixed';
       if (filter === 'coursework') return s.assessmentMode === 'coursework';
+      if (filter === 'written') return s.assessmentMode === 'written';
       return true;
     });
 
@@ -284,7 +467,8 @@
         <td>${s.level}</td>
         <td>${s.assessmentLabel}</td>
         <td>${s.mcqPassMark ? s.mcqPassMark + '%' : '—'}</td>
-        <td>${s.cwPassMark}%</td>
+        <td>${s.cwPassMark ? s.cwPassMark + '%' : '—'}</td>
+        <td>${s.writtenPassMark ? s.writtenPassMark + '%' : '—'}</td>
         <td>${s.studyHours}</td>
         <td class="notes-cell">${s.notes || '—'}</td>
       </tr>
@@ -304,7 +488,8 @@
   // ========== Registration Form ==========
   function renderRegSubjectsGrid() {
     const grid = document.getElementById('regSubjectsGrid');
-    grid.innerHTML = SUBJECTS.map(s => `
+    const allSubjects = [...INSURANCE_SUBJECTS, ...FP_SUBJECTS];
+    grid.innerHTML = allSubjects.map(s => `
       <label class="reg-subject-label ${s.withdrawing ? 'withdrawing' : ''}">
         <input type="checkbox" value="${s.code}" ${s.withdrawing ? 'disabled' : ''}>
         ${s.code} ${s.nameEN}
@@ -326,61 +511,46 @@
       const years = parseInt(document.getElementById('regYears').value) || 0;
       const diplomaCr = parseInt(document.getElementById('regDiplomaCredits').value) || 0;
       const target = document.getElementById('regTarget').value;
+      const pathway = document.getElementById('regPathway').value;
 
       const passedSubjects = [];
-      document.querySelectorAll('#regSubjectsGrid input:checked').forEach(cb => {
-        passedSubjects.push(cb.value);
-      });
+      document.querySelectorAll('#regSubjectsGrid input:checked').forEach(cb => passedSubjects.push(cb.value));
 
       const qualifications = [];
-      document.querySelectorAll('#regQualifications input:checked').forEach(cb => {
-        qualifications.push(cb.value);
-      });
+      document.querySelectorAll('#regQualifications input:checked').forEach(cb => qualifications.push(cb.value));
 
-      // Calculate credits
       let advCredits = 0;
       passedSubjects.forEach(code => {
-        const s = SUBJECTS.find(sub => sub.code === code);
+        const allS = [...INSURANCE_SUBJECTS, ...FP_SUBJECTS];
+        const s = allS.find(sub => sub.code === code);
         if (s) advCredits += s.credits;
       });
-      const totalCredits = diplomaCr + advCredits;
-      const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
 
-      state.registeredStudent = {
-        name, email, company, role, location, years,
-        diplomaCredits: diplomaCr, passedSubjects, qualifications,
-        target, totalCredits, advCredits, gap
-      };
-
-      // Update state
+      state.registeredStudent = { name, email, company, role, location, years, diplomaCredits: diplomaCr, passedSubjects, qualifications, target, pathway, totalCredits: diplomaCr + advCredits, advCredits, gap: Math.max(TARGET_CREDITS - diplomaCr - advCredits, 0) };
       state.diplomaCredits = diplomaCr;
       state.yearsExp = years;
       state.passedSubjects = new Set(passedSubjects);
+      state.pathway = pathway;
 
-      // Show summary
       const summary = document.getElementById('regSummary');
       summary.innerHTML = `
-        <div class="summary-row"><span>姓名：</span><strong>${name}</strong></div>
-        <div class="summary-row"><span>現職：</span><strong>${role} @ ${company}</strong></div>
-        <div class="summary-row"><span>Diploma 學分：</span><strong>${diplomaCr}</strong></div>
-        <div class="summary-row"><span>Adv Dip 學分：</span><strong>${advCredits}</strong></div>
-        <div class="summary-row"><span>總學分：</span><strong>${totalCredits}</strong></div>
-        <div class="summary-row"><span>學分差距：</span><strong class="highlight">${gap}</strong></div>
-        <div class="summary-row"><span>目標：</span><strong>${target === 'chartered' ? 'Chartered Status' : target === 'fellowship' ? 'Fellowship (FCII)' : 'Advanced Diploma'}</strong></div>
+        <div class="summary-row"><span>Name:</span><strong>${name}</strong></div>
+        <div class="summary-row"><span>Role:</span><strong>${role} @ ${company}</strong></div>
+        <div class="summary-row"><span>Pathway:</span><strong>${pathway === 'insurance' ? '🛡️ Insurance' : '💰 Financial Planning'}</strong></div>
+        <div class="summary-row"><span>Diploma credits:</span><strong>${diplomaCr}</strong></div>
+        <div class="summary-row"><span>Adv Dip credits:</span><strong>${advCredits}</strong></div>
+        <div class="summary-row"><span>Total:</span><strong>${diplomaCr + advCredits}</strong></div>
+        <div class="summary-row"><span>Gap:</span><strong class="highlight">${Math.max(TARGET_CREDITS - diplomaCr - advCredits, 0)}</strong></div>
       `;
 
       document.getElementById('regSuccessModal').classList.add('show');
-
-      // Update calculator & dashboard
       updateCalculator();
       updateDashboard();
       renderSubjectGrid();
     });
   }
 
-  function closeModal() {
-    document.getElementById('regSuccessModal').classList.remove('show');
-  }
+  window.closeModal = () => document.getElementById('regSuccessModal').classList.remove('show');
 
   // ========== Dashboard ==========
   function updateDashboard() {
@@ -392,150 +562,90 @@
     const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
     const pct = Math.min(Math.round(totalCredits / TARGET_CREDITS * 100), 100);
 
-    // Header
     document.getElementById('dashName').textContent = student.name;
     document.getElementById('dashRole').textContent = `${student.role} @ ${student.company}`;
     document.getElementById('dashTotalCredits').textContent = totalCredits;
     document.getElementById('dashGap').textContent = gap;
     document.getElementById('dashChartered').textContent = totalCredits >= TARGET_CREDITS && state.yearsExp >= 5 ? '✅' : '❌';
 
-    // Ring
-    const circumference = 2 * Math.PI * 85; // ~534
+    const circumference = 2 * Math.PI * 85;
     const offset = circumference - (pct / 100) * circumference;
     document.getElementById('ringFill').style.strokeDashoffset = offset;
     document.getElementById('ringPct').textContent = pct + '%';
 
-    // Legend
     document.getElementById('legendDiploma').textContent = state.diplomaCredits;
     document.getElementById('legendAdvanced').textContent = advCredits;
     document.getElementById('legendGap').textContent = gap;
 
-    // Progress list
     renderProgressList();
     renderTimeline();
   }
 
   function renderProgressList() {
     const container = document.getElementById('progressList');
-    const rules = checkCoreRules();
+    const subjects = getActiveSubjects();
+    if (subjects.length === 0) {
+      container.innerHTML = '<p class="path-empty">請先選擇職業方向</p>';
+      return;
+    }
 
-    // All subjects the student should care about
-    const relevantSubjects = SUBJECTS.filter(s => !s.withdrawing);
-
-    let html = '';
-
-    // Core section
-    html += '<div class="progress-group"><h3>📕 核心科目</h3>';
-
-    // M05
-    const m05 = SUBJECTS.find(s => s.code === 'M05');
-    html += renderProgressItem(m05, state.passedSubjects.has('M05'));
-
-    // M92 or 530
-    const m92Passed = state.passedSubjects.has('M92');
-    const s530Passed = state.passedSubjects.has('530');
-    html += renderProgressItem(SUBJECTS.find(s => s.code === 'M92'), m92Passed, '二選一');
-    html += renderProgressItem(SUBJECTS.find(s => s.code === '530'), s530Passed, '二選一');
-
-    // 820/930/960
-    html += renderProgressItem(SUBJECTS.find(s => s.code === '820'), state.passedSubjects.has('820'), '三選一');
-    html += renderProgressItem(SUBJECTS.find(s => s.code === '930'), state.passedSubjects.has('930'), '三選一');
-    html += renderProgressItem(SUBJECTS.find(s => s.code === '960'), state.passedSubjects.has('960'), '三選一');
-
+    let html = '<div class="progress-group"><h3>核心科目</h3>';
+    subjects.filter(s => s.category.startsWith('core')).forEach(s => {
+      html += `<div class="progress-item ${state.passedSubjects.has(s.code) ? 'passed' : 'not-started'}">
+        <div class="pi-status">${state.passedSubjects.has(s.code) ? '✅' : '📋'}</div>
+        <div class="pi-info"><div class="pi-header"><strong>${s.code}</strong> ${s.nameEN}</div><div class="pi-detail">${s.credits} credits | ${s.assessmentLabel}</div></div>
+        <div class="pi-credits">${state.passedSubjects.has(s.code) ? '+' + s.credits : '0'}</div>
+      </div>`;
+    });
     html += '</div>';
 
-    // Elective section
-    html += '<div class="progress-group"><h3>📘 選修科目</h3>';
-    SUBJECTS.filter(s => s.category === 'elective' && !s.withdrawing).forEach(s => {
-      html += renderProgressItem(s, state.passedSubjects.has(s.code));
+    html += '<div class="progress-group"><h3>選修科目</h3>';
+    subjects.filter(s => s.category === 'elective' && !s.withdrawing).forEach(s => {
+      html += `<div class="progress-item ${state.passedSubjects.has(s.code) ? 'passed' : 'not-started'}">
+        <div class="pi-status">${state.passedSubjects.has(s.code) ? '✅' : '📋'}</div>
+        <div class="pi-info"><div class="pi-header"><strong>${s.code}</strong> ${s.nameEN}</div><div class="pi-detail">${s.credits} credits | ${s.assessmentLabel}</div></div>
+        <div class="pi-credits">${state.passedSubjects.has(s.code) ? '+' + s.credits : '0'}</div>
+      </div>`;
     });
     html += '</div>';
 
     container.innerHTML = html;
-  }
-
-  function renderProgressItem(subject, passed, optionLabel) {
-    const status = passed ? 'passed' : 'not-started';
-    const statusIcon = passed ? '✅' : '📋';
-    const statusText = passed ? '已通過 Passed' : '未開始 Not Started';
-    const optionTag = optionLabel ? `<span class="option-tag">${optionLabel}</span>` : '';
-
-    return `
-      <div class="progress-item ${status}">
-        <div class="pi-status">${statusIcon}</div>
-        <div class="pi-info">
-          <div class="pi-header">
-            <strong>${subject.code}</strong> ${subject.nameEN} ${optionTag}
-          </div>
-          <div class="pi-detail">
-            ${subject.credits} 學分 | ${subject.assessmentLabel} | ${subject.cwPassMark}% pass
-          </div>
-        </div>
-        <div class="pi-credits">${passed ? '+' + subject.credits : '0'}</div>
-      </div>
-    `;
   }
 
   function renderTimeline() {
     const container = document.getElementById('timeline');
     const path = calculateRecommendedPath();
-
-    if (path.subjects.length === 0) {
-      container.innerHTML = '<div class="timeline-complete">🎉 已達標！無需額外備考。</div>';
+    if (!path.subjects || path.subjects.length === 0) {
+      container.innerHTML = path.gap === 0 ? '<div class="timeline-complete">🎉 已達標！</div>' : '<p class="path-empty">請先設定學員資料</p>';
       return;
     }
 
     let html = '';
     let weekOffset = 1;
-
     path.subjects.forEach((s, i) => {
       const endWeek = weekOffset + s.recommendedWeeks - 1;
       const isCore = s.category.startsWith('core');
-      const typeClass = isCore ? 'core' : 'elective';
-
       html += `
-        <div class="timeline-item ${typeClass}">
+        <div class="timeline-item ${isCore ? 'core' : 'elective'}">
           <div class="tl-marker">${i + 1}</div>
           <div class="tl-content">
-            <div class="tl-header">
-              <strong>${s.code}</strong> ${s.nameEN}
-              <span class="tl-tag ${typeClass}">${isCore ? '核心' : '選修'}</span>
-            </div>
-            <div class="tl-detail">
-              ${s.credits} 學分 | Week ${weekOffset}-${endWeek} | ${s.assessmentLabel}
-            </div>
-            <div class="tl-pass-info">
-              ${s.mcqPassMark ? `MCQ 及格: ${s.mcqPassMark}% | ` : ''}Coursework 及格: ${s.cwPassMark}%
-            </div>
+            <div class="tl-header"><strong>${s.code}</strong> ${s.nameEN} <span class="tl-tag ${isCore ? 'core' : 'elective'}">${isCore ? '核心' : '選修'}</span></div>
+            <div class="tl-detail">${s.credits} credits | Week ${weekOffset}-${endWeek}</div>
           </div>
         </div>
       `;
-
       weekOffset = endWeek + 1;
     });
-
-    html += `
-      <div class="timeline-item finish">
-        <div class="tl-marker">🏁</div>
-        <div class="tl-content">
-          <div class="tl-header"><strong>完成！預計總時長：${path.totalWeeks} 週</strong></div>
-          <div class="tl-detail">完成後總學分：${path.newTotal} | ${path.newTotal >= TARGET_CREDITS ? '✅ 達標！' : '❌ 仍差學分'}</div>
-        </div>
-      </div>
-    `;
-
+    html += `<div class="timeline-item finish"><div class="tl-marker">🏁</div><div class="tl-content"><div class="tl-header"><strong>完成！~${path.totalWeeks} 週</strong></div></div></div>`;
     container.innerHTML = html;
   }
 
   // ========== Event Listeners ==========
   function initEventListeners() {
-    // Diploma credits input
     document.getElementById('diplomaCredits').addEventListener('input', function() {
       state.diplomaCredits = parseInt(this.value) || 0;
       updateCalculator();
     });
-
-    // Years of experience
     document.getElementById('yearsExp').addEventListener('input', function() {
       state.yearsExp = parseInt(this.value) || 0;
       updateCalculator();
@@ -545,17 +655,16 @@
   // ========== Initialize ==========
   function init() {
     initTabs();
+    renderPathwaySelection();
+    renderDirectionSelection();
+    renderRPLSection();
     renderSubjectGrid();
     renderSubjectTable('all');
     initFilterButtons();
     initRegisterForm();
     initEventListeners();
     updateCalculator();
-    updateDashboard();
   }
-
-  // Make closeModal global
-  window.closeModal = closeModal;
 
   document.addEventListener('DOMContentLoaded', init);
 })();
