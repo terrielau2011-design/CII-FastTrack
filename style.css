@@ -882,3 +882,14 @@ body {
   color: var(--gray-600);
   text-align: center;
 }
+
+/* ===== Version Badge ===== */
+.version-badge {
+  font-size: 0.65rem;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
