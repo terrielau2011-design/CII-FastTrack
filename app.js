@@ -444,6 +444,41 @@
       <div class="cb-row"><span class="cb-dot target"></span> 目標: <strong>${target} (${levelInfo?.label})</strong></div>
     `;
 
+    // ===== Calculator Summary Bar (always visible near subject grid) =====
+    document.getElementById('csbGap').textContent = gap;
+    document.getElementById('csbTarget').textContent = target;
+    document.getElementById('csbEarned').textContent = totalCredits;
+    document.getElementById('csbPct').textContent = pct + '%';
+    document.getElementById('csbBarFill').style.width = pct + '%';
+
+    // Show recommended subjects in summary bar
+    const csbRec = document.getElementById('csbRecommend');
+    if (!state.pathway) {
+      csbRec.innerHTML = '<div class="csb-rec-empty">請先選擇職業方向</div>';
+    } else if (gap <= 0) {
+      csbRec.innerHTML = `<div class="csb-rec-complete">🎉 已達標！${levelInfo?.designation} 資格完成</div>`;
+    } else {
+      const path = calculateRecommendedPath();
+      if (path.subjects.length > 0) {
+        csbRec.innerHTML = `
+          <div class="csb-rec-title">📌 推薦你需要考的科目：</div>
+          <div class="csb-rec-subjects">
+            ${path.subjects.map(s => `
+              <div class="csb-rec-item ${s.category.startsWith('core') ? 'core' : 'elective'}">
+                <span class="csb-code">${s.code}</span>
+                <span class="csb-name">${s.nameEN}</span>
+                <span class="csb-credits">${s.credits}cr</span>
+                <span class="csb-type">${s.category.startsWith('core') ? '核心' : '選修'}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="csb-rec-total">新增 ${path.totalNewCredits} 學分 | 完成後總計 ${path.newTotal} | ~${path.totalWeeks} 週</div>
+        `;
+      } else {
+        csbRec.innerHTML = '<div class="csb-rec-empty">選擇已通過科目後，即時顯示推薦路徑</div>';
+      }
+    }
+
     // Core checklist
     const rules = checkCoreRules();
     const checklist = document.getElementById('coreChecklist');

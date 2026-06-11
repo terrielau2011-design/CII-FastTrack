@@ -817,3 +817,68 @@ body {
 /* ===== CB dots for breakdown ===== */
 .cb-dot.existing { background: var(--gray-500); }
 .cb-dot.target { background: var(--navy); }
+
+/* ===== Calculator Summary Bar (sticky near subject grid) ===== */
+.calc-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--navy);
+  color: white;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  box-shadow: var(--shadow-md);
+}
+.csb-gap, .csb-target, .csb-earned {
+  text-align: center;
+  flex-shrink: 0;
+}
+.csb-gap-label, .csb-target-label, .csb-earned-label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; }
+.csb-gap-value { font-size: 2rem; font-weight: 800; }
+.csb-target-value { font-size: 1.2rem; font-weight: 600; }
+.csb-earned-value { font-size: 1.2rem; font-weight: 600; color: var(--blue-light); }
+.csb-progress-mini { flex: 1; }
+.csb-pct { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.csb-bar-mini { background: rgba(255,255,255,0.2); border-radius: 999px; height: 12px; }
+.csb-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue-light), var(--green)); transition: width 0.5s ease; }
+
+@media (max-width: 640px) {
+  .calc-summary-bar { flex-wrap: wrap; gap: 12px; }
+  .csb-progress-mini { width: 100%; order: 5; }
+}
+
+/* ===== CSB Recommend ===== */
+.csb-recommend {
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 12px 0;
+  box-shadow: var(--shadow);
+}
+.csb-rec-empty { color: var(--gray-400); font-style: italic; text-align: center; }
+.csb-rec-complete { color: var(--green); font-weight: 700; font-size: 1.1rem; text-align: center; padding: 16px; }
+.csb-rec-title { font-weight: 700; font-size: 0.95rem; color: var(--navy); margin-bottom: 12px; }
+.csb-rec-subjects { display: flex; flex-wrap: wrap; gap: 10px; }
+.csb-rec-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.csb-rec-item.core { background: var(--orange-light); color: var(--orange); }
+.csb-rec-item.elective { background: var(--blue-bg); color: var(--blue); }
+.csb-code { font-weight: 800; }
+.csb-credits { font-size: 0.75rem; opacity: 0.7; }
+.csb-type { font-size: 0.7rem; font-weight: 600; }
+.csb-rec-total {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  text-align: center;
+}
