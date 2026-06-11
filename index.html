@@ -47,8 +47,15 @@
         <!-- Career Pathway Selection -->
         <div class="section">
           <h2>🧭 Step 1：選擇你的職業方向</h2>
-          <p class="path-intro">CII 涵蓋 Insurance 和 Financial Planning 兩大專業路線，科目體系完全不同。請先選擇你的方向：</p>
+          <p class="path-intro">CII 涵蓋 Insurance 和 Financial Planning 兩大專業路線，科目體系不同。請先選擇方向：</p>
           <div class="pathway-cards" id="pathwayCards"></div>
+        </div>
+
+        <!-- Target Level Selection -->
+        <div class="section">
+          <h2>🎯 Step 1a：你的目標級別</h2>
+          <p class="path-intro">CII 資格從 Award 到 Fellowship 逐級疊加。你想達到哪個級別？</p>
+          <div class="level-cards" id="levelCards"></div>
         </div>
 
         <!-- Insurance Sub-Direction -->
@@ -162,10 +169,13 @@
 
         <!-- Filter -->
         <div class="filter-bar">
-          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn active" data-filter="all">全部 All</button>
           <button class="filter-btn" data-filter="insurance">🛡️ Insurance</button>
           <button class="filter-btn" data-filter="financial-planning">💰 Financial Planning</button>
-          <button class="filter-btn" data-filter="core">📕 Core</button>
+          <button class="filter-btn" data-filter="award-cert">🏅 Award & Certificate</button>
+          <button class="filter-btn" data-filter="diploma">🎓 Diploma</button>
+          <button class="filter-btn" data-filter="advanced-diploma">🎯 Advanced Diploma</button>
+          <button class="filter-btn" data-filter="mcq">📝 MCQ</button>
           <button class="filter-btn" data-filter="mixed">🔄 Mixed</button>
           <button class="filter-btn" data-filter="coursework">📝 Coursework</button>
           <button class="filter-btn" data-filter="written">📝 Written Exam</button>

@@ -786,3 +786,34 @@ body {
 
 /* ===== Category Badge for FP ===== */
 .cat-badge.elective { background: var(--purple-light); color: var(--purple); }
+
+/* ===== Level Cards ===== */
+.level-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+.level-card {
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.level-card:hover:not(.disabled) { border-color: var(--blue); box-shadow: var(--shadow); }
+.level-card.selected { border-color: var(--navy); background: var(--navy); color: white; }
+.level-card.disabled { opacity: 0.3; cursor: not-allowed; }
+.lc-label { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+.lc-credits { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+.lc-designation { font-size: 0.75rem; margin-bottom: 6px; }
+.lc-desc { font-size: 0.7rem; color: var(--gray-400); }
+.level-card.selected .lc-desc { color: rgba(255,255,255,0.7); }
+@media (max-width: 768px) { .level-cards { grid-template-columns: repeat(2, 1fr); } }
+
+/* ===== Level Group Badges ===== */
+.cat-badge.award { background: var(--gray-100); color: var(--gray-600); }
+.cat-badge.certificate { background: var(--blue-bg); color: var(--blue); }
+.cat-badge.diploma { background: var(--green-light); color: var(--green); }
+.cat-badge.adv-dip { background: var(--orange-light); color: var(--orange); }
+
+/* ===== CB dots for breakdown ===== */
+.cb-dot.existing { background: var(--gray-500); }
+.cb-dot.target { background: var(--navy); }

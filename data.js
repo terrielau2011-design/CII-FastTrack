@@ -1,31 +1,103 @@
-// CII FastTrack — Subject Data (v2)
+// CII FastTrack — Subject Data (v3)
 // Source: CII 2026 Qualifications Brochure + CII Results Information page
+// Covers ALL levels: Award → Certificate → Diploma → Advanced Diploma → Fellowship
 // Covers BOTH Insurance and Financial Planning pathways
+
+// ===== Qualification Levels =====
+const QUALIFICATION_LEVELS = [
+  { id: 'award', label: '🏅 Award', creditsRequired: 15, designation: 'CII (Award)', description: '入門級 — 基礎知識，適合新入職或支援角色' },
+  { id: 'certificate', label: '📜 Certificate', creditsRequired: 40, designation: 'Cert CII / CertPFS', description: '初級 — 保險/理財規劃核心知識，可執業' },
+  { id: 'diploma', label: '🎓 Diploma', creditsRequired: 120, designation: 'Dip CII / DipPFS', description: '中級 — 技術與管理知識，專業認可' },
+  { id: 'advanced-diploma', label: '🎯 Advanced Diploma', creditsRequired: 290, designation: 'ACII / APFS', description: '高級 — 深度專業知識，可申請 Chartered' },
+  { id: 'fellowship', label: '👑 Fellowship', creditsRequired: 350, designation: 'FCII / FPFS', description: '最高級 — 行業領袖級別' }
+];
 
 // ===== Career Pathways =====
 const CAREER_PATHWAYS = [
   {
     id: 'insurance',
     label: '🛡️ Insurance 保險',
-    description: 'General Insurance, Claims, Underwriting, Broking, Risk Management',
-    qualification: 'Advanced Diploma in Insurance (ACII)',
-    targetCredits: 290,
-    charteredTitles: ['Chartered Insurer', 'Chartered Insurance Broker', 'Chartered Insurance Practitioner', 'Chartered Insurance Risk Manager', 'Chartered Insurance Underwriting Agent'],
-    memberDesignation: 'ACII'
+    description: 'General Insurance, Claims, Underwriting, Broking, Risk Management, London Market',
+    pathwayLabel: 'Insurance',
+    charteredTitles: ['Chartered Insurer', 'Chartered Insurance Broker', 'Chartered Insurance Practitioner', 'Chartered Insurance Risk Manager', 'Chartered Insurance Underwriting Agent']
   },
   {
     id: 'financial-planning',
     label: '💰 Financial Planning 財務規劃',
-    description: 'Investment, Pensions, Tax Planning, Mortgage, Retirement',
-    qualification: 'Advanced Diploma in Financial Planning (APFS)',
-    targetCredits: 290,
-    charteredTitles: ['Chartered Financial Planner'],
-    memberDesignation: 'APFS'
+    description: 'Investment, Pensions, Tax Planning, Mortgage, Retirement, Paraplanning',
+    pathwayLabel: 'Personal Finance',
+    charteredTitles: ['Chartered Financial Planner']
   }
 ];
 
+// ===== Award & Certificate Level Subjects (Insurance) =====
+const INSURANCE_AWARD_CERT_SUBJECTS = [
+  // Award Level (RQF Level 2-3)
+  { code: 'FIT', nameEN: 'Foundation Insurance Test', nameZH: '基礎保險測試', level: 2, credits: 6, studyHours: 40, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'award' },
+  { code: 'IF1', nameEN: 'Insurance, Legal and Regulatory', nameZH: '保險法律與監管', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF2', nameEN: 'General Insurance Business', nameZH: '一般保險業務', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF3', nameEN: 'Insurance Underwriting Process', nameZH: '保險核保流程', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF4', nameEN: 'Insurance Claims Handling Process', nameZH: '保險理賠處理流程', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF5', nameEN: 'Motor Insurance Products', nameZH: '汽車保險產品', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF6', nameEN: 'Household Insurance Products', nameZH: '家居保險產品', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF7', nameEN: 'Healthcare Insurance Products', nameZH: '醫療保險產品', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF8', nameEN: 'Packaged Commercial Insurances', nameZH: '商業綜合保險', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'IF9', nameEN: 'Customer Service in Insurance', nameZH: '保險客戶服務', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'I10', nameEN: 'Insurance Broking Fundamentals', nameZH: '保險經紀基礎', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'I11', nameEN: 'Introduction to Risk Management', nameZH: '風險管理入門', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'LM1', nameEN: 'London Market Insurance Essentials', nameZH: '倫敦市場保險基礎', level: 3, credits: 10, studyHours: 40, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'LM2', nameEN: 'London Market Insurance Principles and Practices', nameZH: '倫敦市場保險原理與實務', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'LM3', nameEN: 'London Market Underwriting Principles', nameZH: '倫敦市場核保原理', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  { code: 'W01', nameEN: 'Award in General Insurance (non-UK)', nameZH: '一般保險獎項（非英國）', level: 3, credits: 15, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'award', international: true },
+  { code: 'WH1', nameEN: 'Award in General Insurance (Hong Kong)', nameZH: '一般保險獎項（香港）', level: 3, credits: 15, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'award', international: true },
+  { code: 'W04', nameEN: 'Award in Customer Service in Insurance (non-UK)', nameZH: '保險客戶服務獎項（非英國）', level: 3, credits: 15, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'award', international: true },
+  { code: 'GR1', nameEN: 'Group Risk', nameZH: '團體風險', level: 3, credits: 10, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'insurance', levelGroup: 'certificate' },
+  // Diploma Level (RQF Level 4) — non-core units
+  { code: 'M80', nameEN: 'Underwriting Practice', nameZH: '核保實務', level: 4, credits: 20, studyHours: 80, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M81', nameEN: 'Insurance Broking Practice', nameZH: '保險經紀實務', level: 4, credits: 20, studyHours: 80, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M85', nameEN: 'Claims Practice', nameZH: '理賠實務', level: 4, credits: 20, studyHours: 80, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M86', nameEN: 'Personal Insurances', nameZH: '個人保險', level: 4, credits: 20, studyHours: 80, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M90', nameEN: 'Cargo and Goods in Transit Insurances', nameZH: '貨運保險', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M91', nameEN: 'Aviation and Space Insurance', nameZH: '航空與太空保險', level: 4, credits: 30, studyHours: 120, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M93', nameEN: 'Commercial Property and Business Interruption Insurances', nameZH: '商業財產與營業中斷保險', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M94', nameEN: 'Motor Insurance', nameZH: '汽車保險', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M96', nameEN: 'Liability Insurances', nameZH: '責任保險', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M97', nameEN: 'Reinsurance', nameZH: '再保險', level: 4, credits: 30, studyHours: 120, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M98', nameEN: 'Marine Hull and Associated Liabilities', nameZH: '船舶與相關責任保險', level: 4, credits: 30, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M66', nameEN: 'Delegated Authority', nameZH: '授權承保', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+  { code: 'M67', nameEN: 'Fundamentals of Risk Management', nameZH: '風險管理基礎', level: 4, credits: 25, studyHours: 100, assessmentMode: 'mixed', assessmentLabel: '🔄 Mixed', mcqPassMark: 65, cwPassMark: 60, pathway: 'insurance', levelGroup: 'diploma' },
+];
+
+// ===== Award & Certificate & Diploma Level Subjects (Financial Planning) =====
+const FP_AWARD_CERT_DIP_SUBJECTS = [
+  // Level 3 (Certificate/Award)
+  { code: 'CF1', nameEN: 'UK Financial Services, Regulation and Ethics', nameZH: '英國金融服務監管與道德', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  { code: 'CF6', nameEN: 'Mortgage Advice', nameZH: '按揭建議', level: 3, credits: 20, studyHours: 100, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  { code: 'CF8', nameEN: 'Long Term Care Insurance', nameZH: '長期護理保險', level: 3, credits: 15, studyHours: 70, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  { code: 'ER1', nameEN: 'Equity Release', nameZH: '資產释放', level: 3, credits: 15, studyHours: 70, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  { code: 'R05', nameEN: 'Financial Protection', nameZH: '財務保障', level: 3, credits: 10, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  { code: 'GR1_FP', nameEN: 'Group Risk', nameZH: '團體風險', level: 3, credits: 10, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'certificate' },
+  // Level 4 (Diploma)
+  { code: 'R01', nameEN: 'Financial Services, Regulation and Ethics', nameZH: '金融服務監管與道德', level: 4, credits: 20, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'R02', nameEN: 'Investment Principles and Risk', nameZH: '投資原理與風險', level: 4, credits: 20, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'R03', nameEN: 'Personal Taxation', nameZH: '個人稅務', level: 4, credits: 10, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'R04', nameEN: 'Pensions and Retirement Planning', nameZH: '退休規劃', level: 4, credits: 10, studyHours: 50, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'R06', nameEN: 'Financial Planning Practice', nameZH: '財務規劃實務', level: 4, credits: 30, studyHours: 100, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'R07', nameEN: 'Advanced Mortgage Advice', nameZH: '進階按揭建議', level: 4, credits: 15, studyHours: 70, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J02', nameEN: 'Trusts', nameZH: '信託', level: 4, credits: 20, studyHours: 100, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J05', nameEN: 'Pension Income Options', nameZH: '退休收入選擇', level: 4, credits: 20, studyHours: 100, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J07', nameEN: 'Supervision in a Regulated Environment', nameZH: '監管環境下的監督', level: 4, credits: 20, studyHours: 100, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J09', nameEN: 'Paraplanning', nameZH: '理財助理規劃', level: 4, credits: 30, studyHours: 100, assessmentMode: 'coursework', assessmentLabel: '📝 Coursework', cwPassMark: 60, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J10', nameEN: 'Discretionary Investment Management', nameZH: '委託投資管理', level: 4, credits: 20, studyHours: 80, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  { code: 'J12', nameEN: 'Securities Advice and Dealing', nameZH: '證券建議與交易', level: 4, credits: 20, studyHours: 70, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 65, pathway: 'financial-planning', levelGroup: 'diploma' },
+  // International/HK
+  { code: 'HFE', nameEN: 'Award in Financial Planning (Hong Kong)', nameZH: '財務規劃獎項（香港）', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'award', international: true },
+  { code: 'AWF', nameEN: 'Award in Financial Planning (non-UK)', nameZH: '財務規劃獎項（非英國）', level: 3, credits: 15, studyHours: 60, assessmentMode: 'mcq', assessmentLabel: '📝 MCQ', mcqPassMark: 70, pathway: 'financial-planning', levelGroup: 'award', international: true },
+];
 // ===== Insurance Sub-Directions =====
 const INSURANCE_DIRECTIONS = [
+  { id: 'claims', label: '📋 Claims 理賠', recommendedUnits: ['820', '996'], description: '適合理賠方向的從業員' },
+  { id: 'broking', label: '🤝 Broking 經紀', recommendedUnits: ['930'], description: '適合保險經紀方向的從業員' },
   { id: 'claims', label: '📋 Claims 理賠', recommendedUnits: ['820', '996'], description: '適合理賠方向的從業員' },
   { id: 'broking', label: '🤝 Broking 經紀', recommendedUnits: ['930'], description: '適合保險經紀方向的從業員' },
   { id: 'underwriting', label: '✍️ Underwriting 核保', recommendedUnits: ['960', '995'], description: '適合核保方向的從業員' },

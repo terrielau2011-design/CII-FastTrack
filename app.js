@@ -1,22 +1,45 @@
-// CII FastTrack v2 — App Logic with Career Pathways + RPL
+// CII FastTrack v3 — Full qualification levels + Career Pathways + RPL
 
 (function() {
   'use strict';
 
   const state = {
     pathway: null, // 'insurance' or 'financial-planning'
-    insuranceDirection: 'general', // claims/broking/underwriting/risk/general
+    targetLevel: 'advanced-diploma', // default to Adv Diploma
+    insuranceDirection: 'general',
     passedSubjects: new Set(),
-    diplomaCredits: 120,
+    diplomaCredits: 0,
     rplCredits: 0,
     rplQualifications: new Set(),
     yearsExp: 5,
     registeredStudent: null
   };
 
+  function getTargetCredits() {
+    const level = QUALIFICATION_LEVELS.find(l => l.id === state.targetLevel);
+    return level ? level.creditsRequired : 290;
+  }
+
   function getActiveSubjects() {
-    if (state.pathway === 'insurance') return INSURANCE_SUBJECTS;
-    if (state.pathway === 'financial-planning') return FP_SUBJECTS;
+    // Return ALL subjects for the pathway based on target level
+    if (state.pathway === 'insurance') {
+      const all = [...INSURANCE_AWARD_CERT_SUBJECTS, ...INSURANCE_SUBJECTS];
+      return all.filter(s => {
+        if (state.targetLevel === 'award') return s.levelGroup === 'award' || s.level <= 3;
+        if (state.targetLevel === 'certificate') return s.level <= 3;
+        if (state.targetLevel === 'diploma') return s.level <= 4;
+        return true; // advanced-diploma: show all
+      });
+    }
+    if (state.pathway === 'financial-planning') {
+      const all = [...FP_AWARD_CERT_DIP_SUBJECTS, ...FP_SUBJECTS];
+      return all.filter(s => {
+        if (state.targetLevel === 'award') return s.levelGroup === 'award' || s.level <= 3;
+        if (state.targetLevel === 'certificate') return s.level <= 3;
+        if (state.targetLevel === 'diploma') return s.level <= 4;
+        return true;
+      });
+    }
     return [];
   }
 
@@ -51,10 +74,8 @@
     container.innerHTML = CAREER_PATHWAYS.map(p => `
       <div class="pathway-card ${state.pathway === p.id ? 'selected' : ''}" data-pathway="${p.id}">
         <div class="pc-label">${p.label}</div>
-        <div class="pc-qual">${p.qualification}</div>
         <div class="pc-desc">${p.description}</div>
-        <div class="pc-chartered">Chartered 稱號：${p.charteredTitles.join(' / ')}</div>
-        <div class="pc-designation">Member Designation: ${p.memberDesignation}</div>
+        <div class="pc-chartered">Chartered: ${p.charteredTitles.join(' / ')}</div>
       </div>
     `).join('');
 
@@ -63,6 +84,36 @@
         state.pathway = card.dataset.pathway;
         renderPathwaySelection();
         renderDirectionSelection();
+        renderLevelCards();
+        renderSubjectGrid();
+        updateCalculator();
+      });
+    });
+  }
+
+  function renderLevelCards() {
+    const container = document.getElementById('levelCards');
+    const pathway = CAREER_PATHWAYS.find(p => p.id === state.pathway);
+    const pathwayLabel = pathway ? pathway.pathwayLabel : '';
+
+    container.innerHTML = QUALIFICATION_LEVELS.map(l => {
+      const isSelected = state.targetLevel === l.id;
+      const isAccessible = state.pathway !== null;
+      return `
+        <div class="level-card ${isSelected ? 'selected' : ''} ${!isAccessible ? 'disabled' : ''}" data-level="${l.id}">
+          <div class="lc-label">${l.label}</div>
+          <div class="lc-credits">${l.creditsRequired} credits</div>
+          <div class="lc-designation">${l.designation}</div>
+          <div class="lc-desc">${l.description}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.level-card:not(.disabled)').forEach(card => {
+      card.addEventListener('click', () => {
+        state.targetLevel = card.dataset.level;
+        state.diplomaCredits = 0; // reset since target changed
+        renderLevelCards();
         renderSubjectGrid();
         updateCalculator();
       });
@@ -261,13 +312,14 @@
   }
 
   function calculateRecommendedPath() {
-    if (!state.pathway) return { gap: 290, subjects: [], message: '請先選擇職業方向' };
+    if (!state.pathway) return { gap: getTargetCredits(), subjects: [], message: '請先選擇職業方向' };
 
+    const target = getTargetCredits();
     const totalCredits = getTotalCredits();
-    const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
+    const gap = Math.max(target - totalCredits, 0);
 
     if (gap <= 0) {
-      return { gap: 0, subjects: [], totalWeeks: 0, message: '🎉 你已達到 290 學分！' };
+      return { gap: 0, subjects: [], totalWeeks: 0, message: `🎉 你已達到 ${target} 學分！${state.targetLevel === 'advanced-diploma' ? '可申請 Chartered 資格' : QUALIFICATION_LEVELS.find(l => l.id === state.targetLevel)?.designation}` };
     }
 
     const subjects = getActiveSubjects();
@@ -353,36 +405,43 @@
   function updateCalculator() {
     const earnedAdvCredits = getEarnedAdvancedCredits();
     const totalCredits = getTotalCredits();
-    const gap = Math.max(TARGET_CREDITS - totalCredits, 0);
-    const pct = Math.min(Math.round(totalCredits / TARGET_CREDITS * 100), 100);
+    const target = getTargetCredits();
+    const gap = Math.max(target - totalCredits, 0);
+    const pct = Math.min(Math.round(totalCredits / target * 100), 100);
+    const levelInfo = QUALIFICATION_LEVELS.find(l => l.id === state.targetLevel);
 
+    // Update overview
+    document.querySelector('.credit-card.target .credit-value').textContent = target;
     document.getElementById('earnedCredits').textContent = totalCredits;
     document.getElementById('creditGap').textContent = gap;
 
     // Chartered status
     const charteredEl = document.getElementById('charteredStatus');
-    if (totalCredits >= TARGET_CREDITS && state.yearsExp >= 5 && state.pathway) {
+    const canBeChartered = state.targetLevel === 'advanced-diploma' && totalCredits >= 290 && state.yearsExp >= 5 && state.pathway;
+    if (canBeChartered) {
       const titles = CAREER_PATHWAYS.find(p => p.id === state.pathway)?.charteredTitles || [];
-      charteredEl.textContent = `✅ 可申請 ${titles[0]}！`;
+      charteredEl.textContent = `✅ ${titles[0]}！`;
       charteredEl.className = 'credit-value chartered-status eligible';
-    } else if (totalCredits >= TARGET_CREDITS) {
+    } else if (state.targetLevel !== 'advanced-diploma') {
+      charteredEl.textContent = `${levelInfo?.designation || '—'}`;
+      charteredEl.className = 'credit-value chartered-status';
+    } else if (totalCredits >= 290) {
       charteredEl.textContent = '⚠️ 學分達標，年資未夠';
       charteredEl.className = 'credit-value chartered-status partial';
     } else {
-      charteredEl.textContent = `❌ 差 ${gap} 學分`;
+      charteredEl.textContent = `❌ 差 ${gap}`;
       charteredEl.className = 'credit-value chartered-status';
     }
 
-    // Progress
     document.getElementById('progressBar').style.width = pct + '%';
     document.getElementById('progressPct').textContent = pct + '%';
 
-    // Credit breakdown
     document.getElementById('creditBreakdown').innerHTML = `
-      <div class="cb-row"><span class="cb-dot diploma"></span> Diploma: <strong>${state.diplomaCredits}</strong></div>
-      <div class="cb-row"><span class="cb-dot advanced"></span> Adv Dip: <strong>${earnedAdvCredits}</strong></div>
+      <div class="cb-row"><span class="cb-dot existing"></span> 已有學分: <strong>${state.diplomaCredits}</strong></div>
+      <div class="cb-row"><span class="cb-dot advanced"></span> 科目學分: <strong>${earnedAdvCredits}</strong></div>
       <div class="cb-row"><span class="cb-dot rpl"></span> RPL (估): <strong>${state.rplCredits}</strong></div>
       <div class="cb-row"><span class="cb-dot gap"></span> 差距: <strong>${gap}</strong></div>
+      <div class="cb-row"><span class="cb-dot target"></span> 目標: <strong>${target} (${levelInfo?.label})</strong></div>
     `;
 
     // Core checklist
@@ -447,14 +506,18 @@
   // ========== Subject Table ==========
   function renderSubjectTable(filter) {
     const tbody = document.getElementById('subjectTableBody');
-    const allSubjects = [...INSURANCE_SUBJECTS, ...FP_SUBJECTS];
+    const allSubjects = [...INSURANCE_AWARD_CERT_SUBJECTS, ...INSURANCE_SUBJECTS, ...FP_AWARD_CERT_DIP_SUBJECTS, ...FP_SUBJECTS];
     const filtered = filter === 'all' ? allSubjects : allSubjects.filter(s => {
-      if (filter === 'insurance') return INSURANCE_SUBJECTS.includes(s);
-      if (filter === 'financial-planning') return FP_SUBJECTS.includes(s);
-      if (filter === 'core') return s.category.startsWith('core');
+      if (filter === 'insurance') return s.pathway === 'insurance';
+      if (filter === 'financial-planning') return s.pathway === 'financial-planning';
+      if (filter === 'award-cert') return s.levelGroup === 'award' || s.levelGroup === 'certificate';
+      if (filter === 'diploma') return s.levelGroup === 'diploma';
+      if (filter === 'advanced-diploma') return !s.levelGroup || s.levelGroup === 'advanced-diploma' || s.level >= 6;
+      if (filter === 'core') return s.category && s.category.startsWith('core');
       if (filter === 'mixed') return s.assessmentMode === 'mixed';
       if (filter === 'coursework') return s.assessmentMode === 'coursework';
       if (filter === 'written') return s.assessmentMode === 'written';
+      if (filter === 'mcq') return s.assessmentMode === 'mcq';
       return true;
     });
 
@@ -462,7 +525,8 @@
       <tr class="${s.withdrawing ? 'withdrawing-row' : ''}">
         <td><strong>${s.code}</strong></td>
         <td>${s.nameEN}<br><span class="zh-name">${s.nameZH}</span></td>
-        <td><span class="cat-badge ${s.category}">${s.categoryLabel}</span></td>
+        <td>${s.pathway === 'insurance' ? '🛡️' : '💰'}</td>
+        <td><span class="cat-badge ${s.levelGroup || 'adv-dip'}">${s.levelGroup === 'award' ? '🏅 Award' : s.levelGroup === 'certificate' ? '📜 Cert' : s.levelGroup === 'diploma' ? '🎓 Dip' : s.categoryLabel || '📘'}</span></td>
         <td><strong>${s.credits}</strong></td>
         <td>${s.level}</td>
         <td>${s.assessmentLabel}</td>
@@ -470,7 +534,7 @@
         <td>${s.cwPassMark ? s.cwPassMark + '%' : '—'}</td>
         <td>${s.writtenPassMark ? s.writtenPassMark + '%' : '—'}</td>
         <td>${s.studyHours}</td>
-        <td class="notes-cell">${s.notes || '—'}</td>
+        <td class="notes-cell">${s.notes || s.description || '—'}</td>
       </tr>
     `).join('');
   }
@@ -656,6 +720,7 @@
   function init() {
     initTabs();
     renderPathwaySelection();
+    renderLevelCards();
     renderDirectionSelection();
     renderRPLSection();
     renderSubjectGrid();
